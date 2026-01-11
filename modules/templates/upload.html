@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .upload-box {
+        background: #f8f9fa;
+        border: 3px dashed #667eea;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .upload-box h2 {
+        color: #2a5298;
+        margin-bottom: 20px;
+    }
+    
+    .upload-box p {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+    
+    .file-input-label {
+        display: inline-block;
+        padding: 12px 30px;
+        background: #667eea;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    
+    .file-input-label:hover {
+        background: #5568d3;
+    }
+    
+    .file-name {
+        margin-top: 10px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .info-section {
+        background: #e7f3ff;
+        border-left: 4px solid #2a5298;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: 5px;
+    }
+    
+    .info-section h3 {
+        color: #2a5298;
+        margin-bottom: 15px;
+    }
+    
+    .info-section ul {
+        margin-left: 20px;
+        line-height: 1.8;
+    }
+    
+    .info-section li {
+        margin-bottom: 8px;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <h1 style="text-align: center; color: #2a5298; margin-bottom: 30px;">
+        📤 Upload Ship Data
+    </h1>
+    
+    <div class="info-section">
+        <h3>📋 Required Excel Sheet Structure</h3>
+        <p>Your Excel file must contain the following sheets:</p>
+        <ul>
+            <li><strong>Ship Particulars:</strong> General ship information (LOA, LBP, Breadth, etc.)</li>
+            <li><strong>Displacement Table:</strong> Draft vs Displacement data</li>
+            <li><strong>KN Curves:</strong> Cross curves of stability (KN values for different heel angles)</li>
+        </ul>
+    </div>
+    
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+        <div class="upload-box">
+            <h2>Select Excel File</h2>
+            <p>Upload your ship's hydrostatic data in Excel format (.xlsx or .xls)</p>
+            
+            <div class="file-input-wrapper">
+                <label for="file" class="file-input-label">Choose File</label>
+                <input type="file" 
+                       id="file" 
+                       name="file" 
+                       accept=".xlsx,.xls" 
+                       required
+                       onchange="displayFileName(this)">
+            </div>
+            
+            <div id="file-name" class="file-name"></div>
+        </div>
+        
+        <button type="submit" class="btn submit-btn">Upload and Load Data</button>
+    </form>
+    
+    <div class="info-section">
+        <h3>ℹ️ Notes</h3>
+        <ul>
+            <li>Maximum file size: 16 MB</li>
+            <li>Only Excel files (.xlsx, .xls) are supported</li>
+            <li>The uploaded file will replace the current ship data</li>
+            <li>Sample template is pre-loaded for MV Del Monte</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function displayFileName(input) {
+    const fileNameDiv = document.getElementById('file-name');
+    if (input.files && input.files[0]) {
+        fileNameDiv.textContent = '📄 Selected: ' + input.files[0].name;
+    } else {
+        fileNameDiv.textContent = '';
+    }
+}
+</script>
+{% endblock %}
