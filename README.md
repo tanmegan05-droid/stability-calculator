@@ -56,7 +56,15 @@ Run the Flask application:
 python app.py
 ```
 
+For development with debug mode enabled:
+```bash
+export FLASK_DEBUG=true
+python app.py
+```
+
 The application will be available at `http://localhost:5000`
+
+**Note**: Debug mode should never be enabled in production as it may expose sensitive information and allow arbitrary code execution.
 
 ### Using the Calculator
 
