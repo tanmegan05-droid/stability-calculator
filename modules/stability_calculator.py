@@ -41,6 +41,45 @@ class StabilityCalculator:
         kg = base_kg + load_adjustment
         return kg
     
+    def calculate_gz_with_kg(
+        self, 
+        draft_m: float, 
+        kg: float, 
+        heel_angles: List[float] = None
+    ) -> Tuple[List[float], List[float], float]:
+        """
+        Calculate GZ values for different heel angles using provided KG
+        
+        GZ = KN - KG * sin(heel_angle)
+        
+        Args:
+            draft_m: Draft in meters
+            kg: Vertical center of gravity in meters
+            heel_angles: List of heel angles in degrees (optional)
+            
+        Returns:
+            Tuple of (heel_angles, gz_values, displacement)
+        """
+        # Get displacement from draft
+        displacement = self.parser.get_displacement_from_draft(draft_m)
+        
+        # Use default heel angles if not provided
+        if heel_angles is None:
+            heel_angles = self.parser.get_available_heel_angles()
+        
+        gz_values = []
+        
+        for angle in heel_angles:
+            # Get KN value from cross curves
+            kn = self.parser.get_kn_value(displacement, angle)
+            
+            # Calculate GZ = KN - KG * sin(angle)
+            angle_rad = np.radians(angle)
+            gz = kn - kg * np.sin(angle_rad)
+            gz_values.append(gz)
+        
+        return heel_angles, gz_values, displacement
+    
     def calculate_gz(
         self, 
         draft_m: float, 
@@ -83,13 +122,13 @@ class StabilityCalculator:
         
         return heel_angles, gz_values, displacement, kg
     
-    def validate_input(self, draft_m: float, load_kg: float) -> Tuple[bool, str]:
+    def validate_input(self, draft_m: float, kg: float) -> Tuple[bool, str]:
         """
         Validate input parameters
         
         Args:
             draft_m: Draft in meters
-            load_kg: Load weight in kilograms
+            kg: Vertical center of gravity in meters
             
         Returns:
             Tuple of (is_valid, error_message)
@@ -103,13 +142,14 @@ class StabilityCalculator:
         if draft_m > max_draft:
             return False, f"Draft cannot exceed {max_draft} meters"
         
-        # Check load is positive
-        if load_kg < 0:
-            return False, "Load must be a positive value"
+        # Check KG is positive
+        if kg <= 0:
+            return False, "KG (Vertical Center of Gravity) must be a positive value"
         
-        # Check load is reasonable (not more than 10000 tonnes = 10,000,000 kg)
-        if load_kg > 10000000:
-            return False, "Load cannot exceed 10,000,000 kg (10,000 tonnes)"
+        # Check KG is reasonable (typically should be less than draft + depth)
+        # For cargo ships, KG is typically between 0.4 * draft and 1.5 * draft
+        if kg > max_draft * 2:
+            return False, f"KG value seems unreasonably high (should typically be less than {max_draft * 2} meters)"
         
         return True, ""
     

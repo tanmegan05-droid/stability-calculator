@@ -47,12 +47,12 @@ def test_gz_calculation():
         calculator = StabilityCalculator(parser)
         
         draft_m = 5.5
-        load_kg = 500000
+        kg = 2.5
         
-        heel_angles, gz_values, displacement, kg = calculator.calculate_gz(draft_m, load_kg)
+        heel_angles, gz_values, displacement = calculator.calculate_gz_with_kg(draft_m, kg)
         
         print(f"  ✓ Displacement: {displacement}t")
-        print(f"  ✓ KG: {kg:.3f}m")
+        print(f"  ✓ KG: {kg}m")
         print(f"  ✓ Number of GZ values: {len(gz_values)}")
         print(f"  ✓ Max GZ: {max(gz_values):.3f}m at {heel_angles[gz_values.index(max(gz_values))]}°")
         
@@ -75,7 +75,7 @@ def test_input_validation():
         calculator = StabilityCalculator(parser)
         
         # Test valid input
-        is_valid, msg = calculator.validate_input(5.5, 500000)
+        is_valid, msg = calculator.validate_input(5.5, 2.5)
         if is_valid:
             print("  ✓ Valid input accepted")
         else:
@@ -83,19 +83,19 @@ def test_input_validation():
             return False
         
         # Test invalid draft (too high)
-        is_valid, msg = calculator.validate_input(10.0, 500000)
+        is_valid, msg = calculator.validate_input(10.0, 2.5)
         if not is_valid:
             print(f"  ✓ Invalid draft rejected: {msg}")
         else:
             print("  ✗ Invalid draft accepted")
             return False
         
-        # Test invalid load (negative)
-        is_valid, msg = calculator.validate_input(5.5, -1000)
+        # Test invalid KG (negative)
+        is_valid, msg = calculator.validate_input(5.5, -1.0)
         if not is_valid:
-            print(f"  ✓ Negative load rejected: {msg}")
+            print(f"  ✓ Negative KG rejected: {msg}")
         else:
-            print("  ✗ Negative load accepted")
+            print("  ✗ Negative KG accepted")
             return False
         
         return True
@@ -112,9 +112,9 @@ def test_plotting():
         plotter = StabilityPlotter()
         
         draft_m = 5.5
-        load_kg = 500000
+        kg = 2.5
         
-        heel_angles, gz_values, displacement, kg = calculator.calculate_gz(draft_m, load_kg)
+        heel_angles, gz_values, displacement = calculator.calculate_gz_with_kg(draft_m, kg)
         
         plot_path = plotter.plot_gz_curve(
             heel_angles,

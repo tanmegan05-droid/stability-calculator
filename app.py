@@ -53,33 +53,25 @@ def calculate():
     import traceback
     try:
         # Get form data
-        draft_value = float(request.form.get('draft', 0))
-        draft_unit = request.form.get('draft_unit', 'meters')
-        load_kg = float(request.form.get('load', 0))
-        
-        # Convert draft to meters if needed
-        if draft_unit == 'feet':
-            calculator = StabilityCalculator(ShipDataParser(CURRENT_SHIP_DATA))
-            draft_m = calculator.convert_feet_to_meters(draft_value)
-        else:
-            draft_m = draft_value
+        draft_m = float(request.form.get('draft', 0))
+        kg = float(request.form.get('kg', 0))
         
         # Load ship data and initialize calculator
         parser = ShipDataParser(CURRENT_SHIP_DATA)
         calculator = StabilityCalculator(parser)
         
         # Validate input
-        is_valid, error_msg = calculator.validate_input(draft_m, load_kg)
+        is_valid, error_msg = calculator.validate_input(draft_m, kg)
         if not is_valid:
             flash(error_msg, 'error')
             return redirect(url_for('index'))
         
-        # Calculate GZ curve
-        heel_angles, gz_values, displacement, kg = calculator.calculate_gz(draft_m, load_kg)
+        # Calculate GZ curve with provided KG
+        heel_angles, gz_values, displacement = calculator.calculate_gz_with_kg(draft_m, kg)
         
         # Generate plot
         plotter = StabilityPlotter()
-        plot_filename = f'gz_curve_{int(draft_m*100)}_{int(load_kg)}.png'
+        plot_filename = f'gz_curve_{int(draft_m*100)}_{int(kg*100)}.png'
         plotter.plot_gz_curve(
             heel_angles, 
             gz_values, 
@@ -96,11 +88,8 @@ def calculate():
         curve_data = list(zip(heel_angles, [round(gz, 4) for gz in gz_values]))
         
         return render_template('results.html',
-                             draft_input=draft_value,
-                             draft_unit=draft_unit,
                              draft_m=round(draft_m, 3),
-                             load_kg=load_kg,
-                             load_tonnes=round(load_kg/1000, 2),
+                             kg_input=round(kg, 3),
                              displacement=summary['displacement_tonnes'],
                              kg=summary['kg_meters'],
                              max_gz=summary['max_gz_meters'],
