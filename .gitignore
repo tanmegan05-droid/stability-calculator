@@ -31,6 +31,10 @@ instance/
 static/plots/*.png
 uploads/*.xlsx
 
+# Test files
+test_gz_curve.png
+modules/static/plots/test_gz_curve.png
+
 # IDE
 .vscode/
 .idea/

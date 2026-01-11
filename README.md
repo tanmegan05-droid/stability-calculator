@@ -42,6 +42,11 @@ pip install -r requirements.txt
 python create_sample_data.py
 ```
 
+4. Run tests (optional):
+```bash
+python test_loadicator.py
+```
+
 ## Usage
 
 ### Starting the Application
