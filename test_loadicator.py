@@ -9,6 +9,9 @@ from modules.data_parser import ShipDataParser
 from modules.stability_calculator import StabilityCalculator
 from modules.plotter import StabilityPlotter
 
+# Test constants
+FEET_TO_METERS = 0.3048  # Conversion factor from feet to meters
+
 def test_data_loading():
     """Test loading ship data from Excel"""
     print("Test 1: Loading ship data...")
@@ -137,7 +140,7 @@ def test_feet_conversion():
         
         feet = 18.0
         meters = calculator.convert_feet_to_meters(feet)
-        expected = 5.4864  # 18 * 0.3048
+        expected = feet * FEET_TO_METERS
         
         if abs(meters - expected) < 0.001:
             print(f"  ✓ {feet} feet = {meters:.4f} meters")

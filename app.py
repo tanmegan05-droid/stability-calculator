@@ -9,7 +9,8 @@ from modules.stability_calculator import StabilityCalculator
 from modules.plotter import StabilityPlotter
 
 app = Flask(__name__, template_folder='modules/templates', static_folder='modules/static')
-app.secret_key = 'stability-calculator-secret-key-2026'
+# Use environment variable for secret key, fallback to default for development
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'stability-calculator-secret-key-2026')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 

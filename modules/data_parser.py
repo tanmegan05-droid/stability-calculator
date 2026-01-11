@@ -109,8 +109,9 @@ class ShipDataParser:
         angle_high = min([a for a in sorted_angles if a >= heel_angle])
         
         # Get KN values for both angles
-        col_low = f"KN at {int(angle_low)}°"
-        col_high = f"KN at {int(angle_high)}°"
+        # Round angles to avoid floating point issues in column names
+        col_low = f"KN at {round(angle_low)}°"
+        col_high = f"KN at {round(angle_high)}°"
         
         kn_low = np.interp(displacement, displacements, self.kn_curves[col_low].values)
         kn_high = np.interp(displacement, displacements, self.kn_curves[col_high].values)

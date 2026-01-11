@@ -6,6 +6,11 @@ from typing import Tuple, List
 from modules.data_parser import ShipDataParser
 
 
+# Constants for KG calculation
+KG_BASE_FACTOR = 0.45  # Base KG as fraction of draft
+KG_LOAD_ADJUSTMENT = 0.05  # Adjustment per 1000 tonnes of load
+
+
 class StabilityCalculator:
     """Calculate stability parameters and GZ curves"""
     
@@ -31,8 +36,8 @@ class StabilityCalculator:
         # Typical KG is roughly 0.45-0.55 of the draft for cargo ships
         # Adding a small adjustment for load distribution
         # Assume cargo is loaded relatively low in the ship
-        base_kg = 0.45 * draft_m
-        load_adjustment = (load_kg / 1000000) * 0.05  # Small adjustment per 1000 tonnes
+        base_kg = KG_BASE_FACTOR * draft_m
+        load_adjustment = (load_kg / 1000000) * KG_LOAD_ADJUSTMENT  # Adjustment per 1000 tonnes
         kg = base_kg + load_adjustment
         return kg
     
