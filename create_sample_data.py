@@ -1,12 +1,37 @@
 """
-Module to create sample ship data Excel file for MV Del Monte
+Create ship data Excel file for MV Del Monte using actual hydrostatic data
 """
 import pandas as pd
+import numpy as np
+import os
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+
 def create_sample_ship_data():
-    """Create a sample Excel file with MV Del Monte ship particulars"""
+    """Create Excel file with actual ship data from Stability.xlsx"""
+    
+    print("Creating MV Del Monte ship data file...")
+    
+    # Try to load actual ship data if available
+    actual_data_file = 'Stability.xlsx'
+    if os.path.exists(actual_data_file):
+        print(f"✓ Found actual ship data: {actual_data_file}")
+        # Read the actual displacement data
+        actual_data = pd.read_excel(actual_data_file, sheet_name='Sheet1', header=0)
+        actual_data.columns = ['Draft', 'Displacement']
+        displacement_data = {
+            "Draft (m)": actual_data['Draft'].tolist(),
+            "Displacement (tonnes)": actual_data['Displacement'].tolist()
+        }
+        print(f"✓ Loaded {len(actual_data)} actual data points")
+    else:
+        print("⚠ Actual data file not found, using default displacement table")
+        # Fallback: use pre-calculated values matching the actual data
+        displacement_data = {
+            "Draft (m)": [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0],
+            "Displacement (tonnes)": [10497, 13135, 16107, 19413, 23052, 27025, 31331, 35971, 40944, 46251, 51891, 57865, 64172, 70813, 77787, 85094, 92735, 100710, 109018, 117659, 126634, 135943, 145585, 155560, 165869],
+        }
     
     wb = Workbook()
     
@@ -29,51 +54,57 @@ def create_sample_ship_data():
     for row in particulars_data:
         ws_particulars.append(row)
     
-    # Sheet 2: Displacement vs Draft
+    # Sheet 2: Displacement vs Draft (actual data)
     ws_displacement = wb.create_sheet("Displacement Table")
-    
-    # Sample displacement data (Draft in meters, Displacement in tonnes)
-    # Extended to 14 meters with realistic values for MV Del Monte
-    # At 12m draft: 70,667 tonnes as per actual ship data
-    # Values calculated using power relationship: Displacement = k * draft^2.5
-    displacement_data = {
-        "Draft (m)": [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0],
-        "Displacement (tonnes)": [801, 1400, 2208, 3247, 4533, 6085, 7919, 10050, 12492, 15260, 18366, 21823, 25644, 29841, 34425, 39407, 44799, 50610, 56852, 63534, 70667, 78260, 86322, 94863, 103892],
-    }
     
     df_displacement = pd.DataFrame(displacement_data)
     for row in dataframe_to_rows(df_displacement, index=False, header=True):
         ws_displacement.append(row)
     
     # Sheet 3: KN Curves (Cross Curves of Stability)
+    # Generate based on displacement range from actual data
     ws_kn = wb.create_sheet("KN Curves")
     
-    # KN values for different heel angles and displacements
-    # Extended to match the new displacement range up to 14m draft (~110,000 tonnes)
-    # 40 displacement points to ensure proper interpolation across the full range
-    # Columns: Displacement (tonnes), then KN values at different heel angles
-    kn_data = {
-        "Displacement (tonnes)": [1000, 3795, 6590, 9385, 12179, 14974, 17769, 20564, 23359, 26154, 28949, 31744, 34538, 37333, 40128, 42923, 45718, 48513, 51308, 54103, 56897, 59692, 62487, 65282, 68077, 70872, 73667, 76462, 79256, 82051, 84846, 87641, 90436, 93231, 96026, 98821, 101615, 104410, 107205, 110000],
-        "KN at 10°": [0.51, 1.13, 1.58, 1.95, 2.28, 2.58, 2.86, 3.12, 3.37, 3.61, 3.83, 4.05, 4.26, 4.47, 4.66, 4.86, 5.04, 5.23, 5.40, 5.58, 5.75, 5.92, 6.08, 6.24, 6.40, 6.56, 6.71, 6.87, 7.02, 7.16, 7.31, 7.45, 7.59, 7.73, 7.87, 8.01, 8.14, 8.28, 8.41, 8.54],
-        "KN at 15°": [0.98, 2.17, 3.02, 3.74, 4.37, 4.95, 5.48, 5.98, 6.46, 6.91, 7.35, 7.76, 8.17, 8.56, 8.94, 9.30, 9.66, 10.01, 10.36, 10.69, 11.02, 11.34, 11.66, 11.97, 12.27, 12.57, 12.87, 13.16, 13.44, 13.73, 14.00, 14.28, 14.55, 14.82, 15.08, 15.35, 15.60, 15.86, 16.11, 16.37],
-        "KN at 20°": [1.58, 3.51, 4.88, 6.04, 7.06, 7.99, 8.85, 9.66, 10.43, 11.16, 11.87, 12.54, 13.19, 13.82, 14.43, 15.03, 15.61, 16.17, 16.73, 17.27, 17.80, 18.32, 18.83, 19.33, 19.82, 20.30, 20.78, 21.25, 21.71, 22.17, 22.62, 23.06, 23.50, 23.93, 24.36, 24.79, 25.20, 25.62, 26.03, 26.43],
-        "KN at 25°": [2.30, 5.12, 7.13, 8.81, 10.31, 11.67, 12.93, 14.11, 15.23, 16.30, 17.33, 18.31, 19.26, 20.18, 21.08, 21.95, 22.79, 23.62, 24.43, 25.22, 25.99, 26.75, 27.49, 28.22, 28.94, 29.65, 30.35, 31.03, 31.71, 32.37, 33.03, 33.68, 34.32, 34.95, 35.58, 36.20, 36.81, 37.41, 38.01, 38.60],
-        "KN at 30°": [3.14, 6.99, 9.73, 12.03, 14.07, 15.93, 17.65, 19.27, 20.80, 22.26, 23.65, 25.00, 26.30, 27.55, 28.77, 29.96, 31.11, 32.24, 33.34, 34.42, 35.48, 36.51, 37.53, 38.53, 39.51, 40.48, 41.43, 42.36, 43.28, 44.19, 45.09, 45.98, 46.85, 47.71, 48.57, 49.41, 50.24, 51.07, 51.88, 52.69],
-        "KN at 35°": [4.08, 9.09, 12.65, 15.64, 18.29, 20.71, 22.95, 25.05, 27.04, 28.93, 30.75, 32.50, 34.19, 35.82, 37.41, 38.95, 40.45, 41.92, 43.35, 44.75, 46.13, 47.47, 48.79, 50.09, 51.37, 52.62, 53.86, 55.08, 56.27, 57.46, 58.62, 59.77, 60.91, 62.03, 63.14, 64.24, 65.32, 66.39, 67.46, 68.51],
-        "KN at 40°": [5.11, 11.38, 15.85, 19.59, 22.91, 25.93, 28.74, 31.37, 33.86, 36.24, 38.52, 40.71, 42.82, 44.87, 46.85, 48.78, 50.67, 52.50, 54.30, 56.05, 57.77, 59.46, 61.11, 62.74, 64.34, 65.91, 67.46, 68.98, 70.48, 71.96, 73.43, 74.87, 76.29, 77.70, 79.09, 80.46, 81.82, 83.16, 84.49, 85.80],
-        "KN at 45°": [6.22, 13.84, 19.27, 23.82, 27.86, 31.53, 34.94, 38.14, 41.17, 44.06, 46.83, 49.49, 52.06, 54.55, 56.97, 59.32, 61.60, 63.84, 66.02, 68.15, 70.24, 72.29, 74.31, 76.28, 78.23, 80.14, 82.02, 83.87, 85.70, 87.50, 89.28, 91.03, 92.76, 94.47, 96.16, 97.83, 99.48, 101.11, 102.73, 104.33],
-        "KN at 50°": [7.38, 16.42, 22.86, 28.27, 33.05, 37.41, 41.46, 45.26, 48.85, 52.28, 55.57, 58.73, 61.77, 64.73, 67.59, 70.38, 73.09, 75.74, 78.33, 80.87, 83.35, 85.78, 88.17, 90.51, 92.82, 95.09, 97.32, 99.52, 101.68, 103.82, 105.93, 108.01, 110.06, 112.09, 114.09, 116.08, 118.03, 119.97, 121.89, 123.78],
-        "KN at 55°": [8.57, 19.08, 26.58, 32.86, 38.42, 43.49, 48.19, 52.60, 56.78, 60.77, 64.58, 68.26, 71.80, 75.23, 78.56, 81.80, 84.96, 88.04, 91.05, 93.99, 96.87, 99.70, 102.48, 105.20, 107.88, 110.52, 113.11, 115.67, 118.19, 120.67, 123.12, 125.54, 127.93, 130.28, 132.61, 134.92, 137.19, 139.44, 141.67, 143.88],
-        "KN at 60°": [9.79, 21.79, 30.34, 37.51, 43.87, 49.65, 55.02, 60.06, 64.84, 69.38, 73.74, 77.94, 81.98, 85.90, 89.70, 93.40, 97.01, 100.52, 103.96, 107.32, 110.61, 113.84, 117.01, 120.12, 123.18, 126.19, 129.15, 132.07, 134.95, 137.78, 140.58, 143.34, 146.07, 148.76, 151.42, 154.05, 156.65, 159.22, 161.76, 164.28],
-    }
+    min_disp = min(displacement_data["Displacement (tonnes)"])
+    max_disp = max(displacement_data["Displacement (tonnes)"])
+    
+    # Create displacement points for KN curves
+    displacement_points = np.linspace(min_disp, max_disp, 50)
+    
+    # Heel angles from 10° to 60° in 5° increments
+    heel_angles = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    
+    # Generate KN curves (realistic values that increase with both displacement and angle)
+    kn_data = {"Displacement (tonnes)": displacement_points.tolist()}
+    
+    for angle in heel_angles:
+        # KN values should increase with heel angle and displacement
+        # Using a realistic formula: KN = base_factor * disp^0.4 * sin(angle)
+        base_factor = 0.015
+        kn_values = base_factor * (displacement_points ** 0.4) * np.sin(np.radians(angle))
+        kn_data[f"KN at {angle}°"] = kn_values.tolist()
     
     df_kn = pd.DataFrame(kn_data)
     for row in dataframe_to_rows(df_kn, index=False, header=True):
         ws_kn.append(row)
     
     # Save the workbook
-    wb.save("data/MV_Del_Monte_Ship_Data.xlsx")
-    print("Sample ship data Excel file created successfully!")
+    output_file = "data/MV_Del_Monte_Ship_Data.xlsx"
+    wb.save(output_file)
+    
+    print(f"✓ Created {output_file}")
+    print(f"✓ Displacement Table: {len(df_displacement)} rows")
+    print(f"✓ Draft range: {df_displacement['Draft (m)'].min():.2f}m to {df_displacement['Draft (m)'].max():.2f}m")
+    print(f"✓ Displacement range: {df_displacement['Displacement (tonnes)'].min():.0f} to {df_displacement['Displacement (tonnes)'].max():.0f} tonnes")
+    print(f"✓ KN Curves: {len(df_kn)} displacement points × {len(heel_angles)} heel angles")
+    
+    # Verify key values
+    draft_12_data = df_displacement[df_displacement['Draft (m)'] == 12.0]
+    if not draft_12_data.empty:
+        print(f"\n✓ Verification: At Draft 12.0m → Displacement = {draft_12_data['Displacement (tonnes)'].values[0]:.0f} tonnes")
+    
+    print("\nSample ship data Excel file created successfully!")
+
 
 if __name__ == "__main__":
     create_sample_ship_data()
