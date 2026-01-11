@@ -9,7 +9,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 
 def create_sample_ship_data():
-    """Create Excel file with actual ship data from Stability.xlsx"""
+    """Create Excel file with actual ship data from Stability.xlsx and KN curves"""
     
     print("Creating MV Del Monte ship data file...")
     
@@ -32,6 +32,22 @@ def create_sample_ship_data():
             "Draft (m)": [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0],
             "Displacement (tonnes)": [10497, 13135, 16107, 19413, 23052, 27025, 31331, 35971, 40944, 46251, 51891, 57865, 64172, 70813, 77787, 85094, 92735, 100710, 109018, 117659, 126634, 135943, 145585, 155560, 165869],
         }
+    
+    # Try to load actual KN curve data if available
+    kn_data_file = 'extracted_data 2 copy.xlsx'
+    kn_curves_loaded = False
+    if os.path.exists(kn_data_file):
+        print(f"✓ Found actual KN curves: {kn_data_file}")
+        try:
+            kn_data = pd.read_excel(kn_data_file, sheet_name='in', header=0)
+            print(f"✓ Loaded actual KN curves with {len(kn_data)} displacement points")
+            kn_curves_loaded = True
+        except Exception as e:
+            print(f"⚠ Error loading KN curves: {e}")
+            kn_data = None
+    else:
+        print("⚠ KN curves file not found, will use simulated KN values")
+        kn_data = None
     
     wb = Workbook()
     
@@ -62,29 +78,36 @@ def create_sample_ship_data():
         ws_displacement.append(row)
     
     # Sheet 3: KN Curves (Cross Curves of Stability)
-    # Generate based on displacement range from actual data
     ws_kn = wb.create_sheet("KN Curves")
     
-    min_disp = min(displacement_data["Displacement (tonnes)"])
-    max_disp = max(displacement_data["Displacement (tonnes)"])
-    
-    # Create displacement points for KN curves
-    displacement_points = np.linspace(min_disp, max_disp, 50)
-    
-    # Heel angles from 10° to 60° in 5° increments
-    heel_angles = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-    
-    # Generate KN curves (realistic values that increase with both displacement and angle)
-    kn_data = {"Displacement (tonnes)": displacement_points.tolist()}
-    
-    for angle in heel_angles:
-        # KN values should increase with heel angle and displacement
-        # Using a realistic formula: KN = base_factor * disp^0.4 * sin(angle)
-        base_factor = 0.015
-        kn_values = base_factor * (displacement_points ** 0.4) * np.sin(np.radians(angle))
-        kn_data[f"KN at {angle}°"] = kn_values.tolist()
-    
-    df_kn = pd.DataFrame(kn_data)
+    if kn_curves_loaded and kn_data is not None:
+        # Use actual KN curve data from extracted file
+        print("✓ Using actual KN curves from MV Del Monte data")
+        df_kn = kn_data
+        heel_angles = [col for col in df_kn.columns if col != 'Displacement']
+    else:
+        # Generate KN curves based on displacement range from actual data
+        print("✓ Generating simulated KN curves")
+        min_disp = min(displacement_data["Displacement (tonnes)"])
+        max_disp = max(displacement_data["Displacement (tonnes)"])
+        
+        # Create displacement points for KN curves
+        displacement_points = np.linspace(min_disp, max_disp, 50)
+        
+        # Heel angles from 10° to 60° in 5° increments
+        heel_angles = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+        
+        # Generate KN curves (realistic values that increase with both displacement and angle)
+        kn_data_dict = {"Displacement (tonnes)": displacement_points.tolist()}
+        
+        for angle in heel_angles:
+            # KN values should increase with heel angle and displacement
+            # Using a realistic formula: KN = base_factor * disp^0.4 * sin(angle)
+            base_factor = 0.015
+            kn_values = base_factor * (displacement_points ** 0.4) * np.sin(np.radians(angle))
+            kn_data_dict[f"KN at {angle}°"] = kn_values.tolist()
+        
+        df_kn = pd.DataFrame(kn_data_dict)
     for row in dataframe_to_rows(df_kn, index=False, header=True):
         ws_kn.append(row)
     
@@ -96,7 +119,10 @@ def create_sample_ship_data():
     print(f"✓ Displacement Table: {len(df_displacement)} rows")
     print(f"✓ Draft range: {df_displacement['Draft (m)'].min():.2f}m to {df_displacement['Draft (m)'].max():.2f}m")
     print(f"✓ Displacement range: {df_displacement['Displacement (tonnes)'].min():.0f} to {df_displacement['Displacement (tonnes)'].max():.0f} tonnes")
-    print(f"✓ KN Curves: {len(df_kn)} displacement points × {len(heel_angles)} heel angles")
+    kn_angles_count = len([col for col in df_kn.columns if col != 'Displacement'])
+    print(f"✓ KN Curves: {len(df_kn)} displacement points × {kn_angles_count} heel angles")
+    if kn_curves_loaded:
+        print(f"✓ Using ACTUAL MV Del Monte KN curves from extracted data")
     
     # Verify key values
     draft_12_data = df_displacement[df_displacement['Draft (m)'] == 12.0]

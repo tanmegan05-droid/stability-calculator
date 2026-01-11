@@ -83,9 +83,22 @@ class ShipDataParser:
             raise ValueError("KN curves not loaded")
         
         # Get available heel angles from column names
-        heel_columns = [col for col in self.kn_curves.columns if "KN at" in col]
-        available_angles = [float(col.split("°")[0].split("at")[1].strip()) 
-                           for col in heel_columns]
+        # Support both formats: "KN at X°" and "X°"
+        heel_columns = [col for col in self.kn_curves.columns 
+                       if ("KN at" in str(col) or "°" in str(col)) and col != "Displacement (tonnes)"]
+        
+        available_angles = []
+        for col in heel_columns:
+            if "KN at" in str(col):
+                # Old format: "KN at X°"
+                angle = float(col.split("°")[0].split("at")[1].strip())
+            else:
+                # New format: "X°"
+                angle = float(str(col).replace("°", "").strip())
+            available_angles.append(angle)
+        
+        if not available_angles:
+            raise ValueError("No heel angle columns found in KN curves")
         
         # Check if heel angle is within range
         if heel_angle < min(available_angles) or heel_angle > max(available_angles):
@@ -94,7 +107,16 @@ class ShipDataParser:
                 f"[{min(available_angles)}, {max(available_angles)}]°"
             )
         
-        displacements = self.kn_curves["Displacement (tonnes)"].values
+        # Get displacement column name (support both formats)
+        disp_col = None
+        for col in self.kn_curves.columns:
+            if "Displacement" in str(col):
+                disp_col = col
+                break
+        if disp_col is None:
+            raise ValueError("Displacement column not found in KN curves")
+            
+        displacements = self.kn_curves[disp_col].values
         
         # Check if displacement is within range
         if displacement < displacements.min() or displacement > displacements.max():
@@ -108,10 +130,21 @@ class ShipDataParser:
         angle_low = max([a for a in sorted_angles if a <= heel_angle])
         angle_high = min([a for a in sorted_angles if a >= heel_angle])
         
-        # Get KN values for both angles
-        # Round angles to avoid floating point issues in column names
-        col_low = f"KN at {round(angle_low)}°"
-        col_high = f"KN at {round(angle_high)}°"
+        # Get KN values for both angles - find the correct column name
+        col_low = None
+        col_high = None
+        for col in heel_columns:
+            if "KN at" in str(col):
+                angle = float(col.split("°")[0].split("at")[1].strip())
+            else:
+                angle = float(str(col).replace("°", "").strip())
+            if angle == angle_low:
+                col_low = col
+            if angle == angle_high:
+                col_high = col
+        
+        if col_low is None or col_high is None:
+            raise ValueError(f"Could not find KN columns for angles {angle_low}° and {angle_high}°")
         
         kn_low = np.interp(displacement, displacements, self.kn_curves[col_low].values)
         kn_high = np.interp(displacement, displacements, self.kn_curves[col_high].values)
@@ -128,9 +161,20 @@ class ShipDataParser:
         if self.kn_curves is None:
             return []
         
-        heel_columns = [col for col in self.kn_curves.columns if "KN at" in col]
-        angles = [float(col.split("°")[0].split("at")[1].strip()) 
-                 for col in heel_columns]
+        # Support both formats: "KN at X°" and "X°"
+        heel_columns = [col for col in self.kn_curves.columns 
+                       if ("KN at" in str(col) or "°" in str(col)) and col != "Displacement (tonnes)"]
+        
+        angles = []
+        for col in heel_columns:
+            if "KN at" in str(col):
+                # Old format: "KN at X°"
+                angle = float(col.split("°")[0].split("at")[1].strip())
+            else:
+                # New format: "X°"
+                angle = float(str(col).replace("°", "").strip())
+            angles.append(angle)
+        
         return sorted(angles)
     
     def get_draft_range(self) -> Tuple[float, float]:
