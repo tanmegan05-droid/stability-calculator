@@ -82,8 +82,8 @@ def test_input_validation():
             print(f"  ✗ Valid input rejected: {msg}")
             return False
         
-        # Test invalid draft (too high)
-        is_valid, msg = calculator.validate_input(10.0, 2.5)
+        # Test invalid draft (too high - above 14.0m)
+        is_valid, msg = calculator.validate_input(15.0, 2.5)
         if not is_valid:
             print(f"  ✓ Invalid draft rejected: {msg}")
         else:
