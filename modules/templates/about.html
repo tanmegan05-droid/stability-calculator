@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .about-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .about-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+    
+    .about-section h2 {
+        color: #2a5298;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+    }
+    
+    .about-section h3 {
+        color: #2a5298;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .about-section p {
+        line-height: 1.8;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .about-section ul {
+        margin-left: 20px;
+        line-height: 1.8;
+        margin-bottom: 15px;
+    }
+    
+    .about-section li {
+        margin-bottom: 10px;
+    }
+    
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .feature-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+    }
+    
+    .feature-card .icon {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+    
+    .feature-card h4 {
+        color: #2a5298;
+        margin-bottom: 10px;
+    }
+    
+    .formula {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        margin: 15px 0;
+        border-left: 4px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <h1 style="text-align: center; color: #2a5298; margin-bottom: 30px;">
+        📖 About Loadicator
+    </h1>
+    
+    <div class="about-section">
+        <h2>What is Loadicator?</h2>
+        <p>
+            Loadicator is a professional ship stability calculator designed to analyze and visualize 
+            the stability characteristics of vessels through GZ (righting lever) curves. It provides 
+            naval architects, ship operators, and marine engineers with instant stability assessments 
+            based on loading conditions.
+        </p>
+        <p>
+            The tool is specifically configured for <strong>MV Del Monte</strong> but can be adapted 
+            to any vessel by uploading appropriate hydrostatic data.
+        </p>
+    </div>
+    
+    <div class="about-section">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h4>GZ Curves</h4>
+                <p>Dynamic stability curve generation</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📈</div>
+                <h4>Real-time Calculation</h4>
+                <p>Instant displacement and stability analysis</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📤</div>
+                <h4>Data Upload</h4>
+                <p>Custom ship data import via Excel</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">✅</div>
+                <h4>Validation</h4>
+                <p>Input validation and error checking</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="about-section">
+        <h2>How It Works</h2>
+        
+        <h3>1. Input Parameters</h3>
+        <p>Users provide two key parameters:</p>
+        <ul>
+            <li><strong>Draft:</strong> The depth of the ship below the waterline (in meters or feet)</li>
+            <li><strong>Load:</strong> The cargo/load weight (in kilograms)</li>
+        </ul>
+        
+        <h3>2. Calculations</h3>
+        <p>The system performs the following calculations:</p>
+        <ul>
+            <li><strong>Displacement:</strong> Calculated from the input draft using the displacement table</li>
+            <li><strong>KG (Center of Gravity):</strong> Estimated based on draft and loading conditions</li>
+            <li><strong>GZ Values:</strong> Computed using the formula:</li>
+        </ul>
+        <div class="formula">
+            GZ = KN - KG × sin(heel angle)
+        </div>
+        <p>Where:</p>
+        <ul>
+            <li><strong>KN:</strong> Cross curve value (from hydrostatic data)</li>
+            <li><strong>KG:</strong> Vertical center of gravity</li>
+            <li><strong>Heel angle:</strong> Angle of list (typically 0° to 60°)</li>
+        </ul>
+        
+        <h3>3. Output</h3>
+        <p>The tool generates:</p>
+        <ul>
+            <li>Interactive GZ stability curve plot</li>
+            <li>Key stability parameters (max GZ, angle of max GZ, etc.)</li>
+            <li>Detailed table of heel angles vs GZ values</li>
+            <li>Displacement and center of gravity information</li>
+        </ul>
+    </div>
+    
+    <div class="about-section">
+        <h2>Understanding GZ Curves</h2>
+        <p>
+            The GZ curve (also known as the righting lever curve) is fundamental to ship stability analysis. 
+            It shows how much righting moment the vessel generates at different angles of heel.
+        </p>
+        <ul>
+            <li><strong>Positive GZ:</strong> Indicates stability - the ship will right itself</li>
+            <li><strong>Maximum GZ:</strong> The peak righting ability of the vessel</li>
+            <li><strong>Zero GZ:</strong> The angle beyond which the ship may capsize</li>
+            <li><strong>Area under curve:</strong> Represents the total righting energy available</li>
+        </ul>
+    </div>
+    
+    <div class="about-section">
+        <h2>Technical Details</h2>
+        <p><strong>Technology Stack:</strong></p>
+        <ul>
+            <li>Backend: Python with Flask web framework</li>
+            <li>Data Processing: Pandas, NumPy</li>
+            <li>Visualization: Matplotlib</li>
+            <li>Excel Integration: openpyxl</li>
+        </ul>
+        
+        <p><strong>Ship Data Requirements:</strong></p>
+        <ul>
+            <li>Ship particulars (LOA, LBP, Breadth, etc.)</li>
+            <li>Displacement vs Draft table</li>
+            <li>Cross curves of stability (KN curves)</li>
+        </ul>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('index') }}" class="btn">Start Calculating</a>
+    </div>
+</div>
+{% endblock %}

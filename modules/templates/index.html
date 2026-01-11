@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1em;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 1em;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 5px;
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+    
+    .unit-group {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 10px;
+    }
+    
+    .info-box {
+        background: #e7f3ff;
+        border-left: 4px solid #2a5298;
+        padding: 15px;
+        margin-bottom: 25px;
+        border-radius: 5px;
+    }
+    
+    .info-box h3 {
+        color: #2a5298;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+    }
+    
+    .info-box p {
+        margin: 5px 0;
+        color: #333;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="info-box">
+        <h3>📊 Ship: {{ ship_name }}</h3>
+        <p><strong>Valid Draft Range:</strong> {{ "{:.2f}".format(draft_min) }} - {{ "{:.2f}".format(draft_max) }} meters</p>
+        <p>Enter the ship's draft and load to calculate the GZ stability curve.</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('calculate') }}">
+        <div class="form-group">
+            <label for="draft">Draft</label>
+            <div class="unit-group">
+                <input type="number" 
+                       id="draft" 
+                       name="draft" 
+                       step="0.01" 
+                       min="0.01" 
+                       required 
+                       placeholder="Enter draft value">
+                <select id="draft_unit" name="draft_unit">
+                    <option value="meters">Meters</option>
+                    <option value="feet">Feet</option>
+                </select>
+            </div>
+            <small>Enter the ship's draft (depth of the ship below waterline)</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="load">Load (kg)</label>
+            <input type="number" 
+                   id="load" 
+                   name="load" 
+                   step="1" 
+                   min="0" 
+                   required 
+                   placeholder="Enter load in kilograms">
+            <small>Enter the cargo/load weight in kilograms (1 tonne = 1000 kg)</small>
+        </div>
+        
+        <button type="submit" class="btn submit-btn">Calculate GZ Curve</button>
+    </form>
+</div>
+{% endblock %}
